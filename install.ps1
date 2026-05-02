@@ -19,7 +19,7 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     Remove-Item $out
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User") + ";" + [System.Environment]::GetEnvironmentVariable("Path","Machine")
 } else {
-    Write-Host "[1/4] Python 已安装 ✓"
+    Write-Host "[1/4] Python 已安装"
 }
 
 # 2. 下载 ffmpeg
@@ -37,7 +37,7 @@ if (-not (Test-Path "$installDir\ffmpeg.exe")) {
     Remove-Item $ffZip
     Remove-Item "$env:TEMP\ffmpeg_tmp" -Recurse -Force
 } else {
-    Write-Host "[2/4] ffmpeg 已存在 ✓"
+    Write-Host "[2/4] ffmpeg 已存在"
 }
 
 # 3. 安装 Whisper
