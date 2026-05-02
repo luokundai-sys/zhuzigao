@@ -7,7 +7,7 @@ Write-Host "  逐字稿提取工具 . Windows 一键安装"
 Write-Host "================================================"
 Write-Host ""
 
-$GistRaw = "REPLACE_WITH_YOUR_GIST_URL"   # whisper_app.py 的 raw 地址
+$GistRaw = "https://raw.githubusercontent.com/luokundai-sys/zhuzigao/main/whisper_app.py"
 
 # 1. 检测 Python
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {

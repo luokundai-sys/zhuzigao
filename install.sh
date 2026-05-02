@@ -8,7 +8,7 @@ echo "║   逐字稿提取工具 · Mac 一键安装       ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 
-GIST_RAW="REPLACE_WITH_YOUR_GIST_URL"   # whisper_app.py 的 raw 地址
+GIST_RAW="https://raw.githubusercontent.com/luokundai-sys/zhuzigao/main/whisper_app.py"
 
 # 1. 检测 Homebrew
 if ! command -v brew &>/dev/null; then
