@@ -22,8 +22,8 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     Write-Host "[1/4] Python 已安装"
 }
 
-# 2. 下载 ffmpeg
-$installDir = "$env:USERPROFILE\逐字稿提取"
+# 2. 下载 ffmpeg（用英文路径避免乱码）
+$installDir = "$env:USERPROFILE\WhisperApp"
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 if (-not (Test-Path "$installDir\ffmpeg.exe")) {
@@ -45,7 +45,6 @@ Write-Host "[3/4] 安装 Whisper 和 PyTorch..."
 python -m pip install --upgrade pip --quiet
 python -m pip install openai-whisper --quiet
 
-# 卸载可能存在的旧版 torch
 python -m pip uninstall torch -y 2>$null | Out-Null
 
 Write-Host "    检测显卡..."
@@ -66,17 +65,17 @@ if ($hasNvidia) {
 Write-Host "[4/4] 下载主程序..."
 Invoke-WebRequest -Uri $GistRaw -OutFile "$installDir\whisper_app.py"
 
-# 创建桌面快捷方式（带错误保留）
+# 创建桌面快捷方式（用英文路径，避免编码问题）
 $desktop = [Environment]::GetFolderPath("Desktop")
-$bat = "$desktop\逐字稿提取.bat"
+$bat = "$desktop\WhisperTranscript.bat"
 @"
 @echo off
 chcp 65001 >nul
-set PATH=%USERPROFILE%\逐字稿提取;%PATH%
-python "%USERPROFILE%\逐字稿提取\whisper_app.py"
+set PATH=%USERPROFILE%\WhisperApp;%PATH%
+python "%USERPROFILE%\WhisperApp\whisper_app.py"
 if %errorlevel% neq 0 (
     echo.
-    echo [错误] 程序运行失败，错误代码：%errorlevel%
+    echo [Error] Program failed with code: %errorlevel%
     pause
 )
 "@ | Out-File -FilePath $bat -Encoding ASCII
@@ -86,9 +85,6 @@ Write-Host "================================================"
 Write-Host "          安装完成！"
 Write-Host "================================================"
 Write-Host ""
-Write-Host "  双击桌面上的「逐字稿提取.bat」即可使用"
-Write-Host ""
-Write-Host "  验证 N 卡是否启用，可在 cmd 里运行："
-Write-Host "  python -c `"import torch; print('CUDA:', torch.cuda.is_available())`""
+Write-Host "  双击桌面上的「WhisperTranscript.bat」即可使用"
 Write-Host ""
 pause
