@@ -43,5 +43,4 @@ if (-not (Test-Path "$installDir\ffmpeg.exe")) {
 }
 
 Write-Host "[3/4] 安装 Whisper 和 PyTorch..."
-& $pythonExe -m pip install --upgrade pip --quiet
 & $pythonExe -m pip ins
