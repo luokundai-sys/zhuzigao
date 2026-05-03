@@ -8,6 +8,10 @@ import time
 import subprocess
 import platform
 
+# 自动把 WhisperApp 目录加入 PATH，让 whisper 能找到 ffmpeg
+_app_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else ""
+if _app_dir and _app_dir not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = _app_dir + os.pathsep + os.environ.get("PATH", "")
 IS_MAC = platform.system() == "Darwin"
 IS_WIN = platform.system() == "Windows"
 FONT   = "Helvetica" if IS_MAC else "Microsoft YaHei"
