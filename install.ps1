@@ -70,6 +70,7 @@ $bat = "$desktop\WhisperTranscript.bat"
 @"
 @echo off
 chcp 65001 >nul
+set PATH=%USERPROFILE%\WhisperApp;%PATH%
 "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" "%USERPROFILE%\WhisperApp\whisper_app.py"
 if %errorlevel% neq 0 (
     echo.
