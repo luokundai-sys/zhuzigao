@@ -13,7 +13,6 @@ IS_WIN = platform.system() == "Windows"
 FONT   = "Helvetica" if IS_MAC else "Microsoft YaHei"
 
 
-# ── Tooltip ───────────────────────────────────────────────────────────────────
 class Tooltip:
     def __init__(self, widget, text):
         self.tip = None
@@ -36,9 +35,7 @@ class Tooltip:
             self.tip = None
 
 
-# ── Main App ──────────────────────────────────────────────────────────────────
 class App:
-    # 文件状态标记
     WAIT  = "⏳"
     DOING = "🔄"
     DONE  = "✅"
@@ -49,23 +46,18 @@ class App:
         self.root.title("逐字稿提取")
         self.root.geometry("560x640")
         self.root.resizable(False, False)
-
-        self.file_list   = []   # [(path, duration), ...]
+        self.file_list   = []
         self._paused     = False
         self._device     = "cpu"
-        self._out_paths  = []   # 完成后记录所有输出路径
-
+        self._out_paths  = []
         self._build()
 
-    # ── UI ────────────────────────────────────────────────────────────────────
     def _build(self):
-        # 第一步：选择文件
         tk.Label(self.root, text="第一步：选择文件",
                  font=(FONT, 12, "bold")).pack(anchor="w", padx=20, pady=(16, 4))
 
         file_ctrl = tk.Frame(self.root)
         file_ctrl.pack(fill="x", padx=20)
-
         tk.Button(file_ctrl, text="添加文件", font=(FONT, 11),
                   padx=8, command=self.add_files).pack(side="left")
         tk.Button(file_ctrl, text="删除选中", font=(FONT, 11),
@@ -77,21 +69,16 @@ class App:
                                          font=(FONT, 10), fg="gray")
         self.file_count_label.pack(side="right")
 
-        # 文件列表（带滚动条）
         list_frame = tk.Frame(self.root, relief="groove", bd=1)
         list_frame.pack(fill="x", padx=20, pady=(6, 0))
-
         scrollbar = tk.Scrollbar(list_frame, orient="vertical")
-        self.listbox = tk.Listbox(list_frame, height=6,
-                                  font=(FONT, 11),
+        self.listbox = tk.Listbox(list_frame, height=6, font=(FONT, 11),
                                   yscrollcommand=scrollbar.set,
-                                  selectmode="extended",
-                                  activestyle="none")
+                                  selectmode="extended", activestyle="none")
         scrollbar.config(command=self.listbox.yview)
         scrollbar.pack(side="right", fill="y")
         self.listbox.pack(fill="x")
 
-        # 第二步：语言
         tk.Label(self.root, text="第二步：选择语言",
                  font=(FONT, 12, "bold")).pack(anchor="w", padx=20, pady=(14, 4))
 
@@ -108,13 +95,10 @@ class App:
             b.pack(side="left", padx=8)
             Tooltip(b, tip)
 
-        # 第三步：精度
         tk.Label(self.root, text="第三步：选择精度",
                  font=(FONT, 12, "bold")).pack(anchor="w", padx=20, pady=(14, 4))
 
         self.model_var = tk.StringVar(value="base")
-
-        # M5 Pro GPU 实测速度倍率（相对实时音频）
         self._model_speeds = {
             "tiny": 15.0, "base": 8.0, "small": 4.0, "medium": 2.0, "large": 1.0
         }
@@ -139,9 +123,7 @@ class App:
             lbl = tk.Label(col, text="--", font=(FONT, 9), fg="#999")
             lbl.pack()
             self._model_time_labels[val] = lbl
-            Tooltip(b, tip)
 
-        # 按钮行
         btn_row = tk.Frame(self.root)
         btn_row.pack(pady=(14, 6))
 
@@ -161,12 +143,10 @@ class App:
         bench_btn.pack(side="left")
         Tooltip(bench_btn, "检测 CPU / GPU 算力\n并推荐最适合的运行模式")
 
-        # 总体进度标签
         self.overall_label = tk.Label(self.root, text="",
                                       font=(FONT, 10), fg="gray")
         self.overall_label.pack(anchor="w", padx=20)
 
-        # 当前文件进度条
         prog_row = tk.Frame(self.root)
         prog_row.pack(fill="x", padx=20, pady=(2, 0))
         self.progress = ttk.Progressbar(prog_row, length=380,
@@ -176,7 +156,6 @@ class App:
                                   font=(FONT, 11), width=5)
         self.pct_label.pack(side="left")
 
-        # 预计时间
         eta_row = tk.Frame(self.root)
         eta_row.pack(fill="x", padx=20, pady=(4, 0))
 
@@ -190,12 +169,10 @@ class App:
                                   font=(FONT, 10, "bold"), fg="#007AFF", width=8)
         self.eta_label.pack(side="left")
 
-        # 状态文字
         self.status_label = tk.Label(self.root, text="请添加文件后点击「开始转录」",
                                      font=(FONT, 10), fg="gray")
         self.status_label.pack(pady=(4, 0))
 
-        # 完成后的输出区域（初始隐藏）
         self.result_frame = tk.Frame(self.root)
         self.result_label = tk.Label(self.result_frame,
                                      text="转录完成，点击文件名在 Finder 中显示：",
@@ -211,7 +188,6 @@ class App:
         self.result_listbox.pack(fill="x")
         self.result_listbox.bind("<Button-1>", self._on_result_click)
 
-    # ── 文件管理 ──────────────────────────────────────────────────────────────
     def add_files(self):
         paths = filedialog.askopenfilenames(
             title="选择视频或音频文件（可多选）",
@@ -267,7 +243,6 @@ class App:
         except Exception:
             return None
 
-    # ── 批量转录 ──────────────────────────────────────────────────────────────
     def start(self):
         if not self.file_list:
             self.set_status("请先添加文件！", "red")
@@ -280,7 +255,6 @@ class App:
         self.result_frame.pack_forget()
         self.set_progress(0)
         self.set_eta("--:--", "--:--", "--")
-        # 重置列表状态
         for i in range(len(self.file_list)):
             name = os.path.basename(self.file_list[i][0])
             self.listbox.delete(i)
@@ -295,14 +269,15 @@ class App:
             self.set_status("已暂停，点击继续恢复转录…", "#FF9500")
         else:
             self.pause_btn.config(text="⏸ 暂停")
-            self.set_status(f"转录中（{'GPU 加速' if self._device == 'mps' else 'CPU'}）…", "blue")
+            self.set_status(f"转录中（{'GPU 加速' if self._device != 'cpu' else 'CPU'}）…", "blue")
 
     def _run_batch(self):
         try:
             import whisper
             import torch
         except ImportError as e:
-            self.set_status(f"缺少依赖：{e}", "red")
+            err = str(e)
+            self.set_status(f"缺少依赖：{err}", "red")
             self._finish()
             return
 
@@ -356,11 +331,11 @@ class App:
                     done_count += 1
                     print(f"  └─ 完成 ✓  →  {out_path}\n")
                 except Exception as e:
-                    self._set_list_item(file_idx, self.ERROR, f"{name}  [{e}]")
+                    err = str(e)
+                    self._set_list_item(file_idx, self.ERROR, f"{name}  [{err}]")
                     error_count += 1
-                    print(f"  └─ 失败 ✗  {e}\n")
+                    print(f"  └─ 失败 ✗  {err}\n")
 
-            # 全部完成
             total_time = self._fmt(time.time() - self._batch_start)
             print(f"{'='*52}")
             print(f"  全部完成  ✓  成功 {done_count} 个  失败 {error_count} 个")
@@ -376,12 +351,12 @@ class App:
             self._show_results()
 
         except Exception as e:
-            self.set_status(f"出错：{e}", "red")
+            err = str(e)
+            self.set_status(f"出错：{err}", "red")
 
         self._finish()
 
     def _transcribe_one(self, model, path, duration, lang):
-        """转录单个文件，支持暂停，返回输出路径"""
         import whisper
 
         audio        = whisper.load_audio(path)
@@ -396,11 +371,9 @@ class App:
         )
 
         all_text   = []
-        file_start = time.time()
         chunk_times = []
 
         for i, chunk in enumerate(chunks):
-            # 暂停检测（暂停期间不计时）
             while self._paused:
                 time.sleep(0.2)
 
@@ -417,7 +390,6 @@ class App:
             elapsed_all = time.time() - self._batch_start
             speed       = 30 / avg_chunk
 
-            # 终端实时日志
             chunk_start_sec = i * 30
             cm, cs = divmod(chunk_start_sec, 60)
             bar = "█" * (pct // 5) + "░" * (20 - pct // 5)
@@ -430,11 +402,7 @@ class App:
                 print(f"  │  ▶ {result.text.strip()[:60]}")
 
             self.set_progress(pct)
-            self.set_eta(
-                self._fmt(elapsed_all),
-                self._fmt(remaining),
-                f"{speed:.1f}x"
-            )
+            self.set_eta(self._fmt(elapsed_all), self._fmt(remaining))
 
         full_text = "".join(all_text).strip()
         out_path  = os.path.splitext(path)[0] + "_逐字稿.txt"
@@ -442,7 +410,6 @@ class App:
             f.write(full_text)
         return out_path
 
-    # ── 结果展示 ──────────────────────────────────────────────────────────────
     def _show_results(self):
         def _do():
             self.result_listbox.delete(0, tk.END)
@@ -460,7 +427,6 @@ class App:
             elif IS_WIN:
                 subprocess.run(["explorer", "/select,", p])
 
-    # ── 算力测试 ──────────────────────────────────────────────────────────────
     def run_benchmark(self):
         win = tk.Toplevel(self.root)
         win.title("算力测试")
@@ -482,36 +448,48 @@ class App:
                     torch.mm(a, b)
                     if dev == "mps":
                         torch.mps.synchronize()
+                    elif dev == "cuda":
+                        torch.cuda.synchronize()
                     t0 = time.time()
                     for _ in range(10):
                         torch.mm(a, b)
                     if dev == "mps":
                         torch.mps.synchronize()
+                    elif dev == "cuda":
+                        torch.cuda.synchronize()
                     return (2 * size**3 * 10) / (time.time() - t0) / 1e9
 
-                cpu    = measure("cpu")
-                mps_ok = torch.backends.mps.is_available()
-                gpu    = measure("mps") if mps_ok else 0
+                cpu = measure("cpu")
+                if torch.backends.mps.is_available():
+                    gpu = measure("mps")
+                    gpu_name = "GPU (MPS)"
+                elif torch.cuda.is_available():
+                    gpu = measure("cuda")
+                    gpu_name = f"GPU ({torch.cuda.get_device_name(0)})"
+                else:
+                    gpu = 0
+                    gpu_name = None
 
-                if mps_ok:
+                if gpu_name:
                     speedup = gpu / cpu
-                    rec     = "GPU (MPS)" if speedup > 1.5 else "CPU"
-                    msg     = (f"CPU 算力：{cpu:.0f} GFLOPS\n"
-                               f"GPU 算力：{gpu:.0f} GFLOPS\n"
-                               f"GPU 比 CPU 快：{speedup:.1f} 倍\n\n"
-                               f"建议使用：{rec} 模式\n"
-                               f"{'✅ 已自动使用 GPU 加速' if rec == 'GPU (MPS)' else '✅ CPU 模式已足够'}")
+                    rec = gpu_name if speedup > 1.5 else "CPU"
+                    msg = (f"CPU 算力：{cpu:.0f} GFLOPS\n"
+                           f"GPU 算力：{gpu:.0f} GFLOPS\n"
+                           f"GPU 比 CPU 快：{speedup:.1f} 倍\n\n"
+                           f"建议使用：{rec}\n"
+                           f"{'✅ 已自动使用 GPU 加速' if speedup > 1.5 else '✅ CPU 模式已足够'}")
                 else:
                     msg = f"CPU 算力：{cpu:.0f} GFLOPS\nGPU：不可用\n\n建议使用：CPU 模式"
 
-                win.after(0, lambda: lbl.config(text=msg, fg="black",
-                                                justify="left", padx=20))
+                final_msg = msg
+                win.after(0, lambda m=final_msg: lbl.config(text=m, fg="black",
+                                                             justify="left", padx=20))
             except Exception as e:
-                win.after(0, lambda: lbl.config(text=f"出错：{e}", fg="red"))
+                err_msg = f"出错：{e}"
+                win.after(0, lambda m=err_msg: lbl.config(text=m, fg="red"))
 
         threading.Thread(target=_do, daemon=True).start()
 
-    # ── 工具方法 ──────────────────────────────────────────────────────────────
     def _set_list_item(self, idx, icon, name):
         def _do():
             self.listbox.delete(idx)
@@ -553,10 +531,6 @@ class App:
             self.pause_btn.config(state="disabled", text="⏸ 暂停"),
             self.elapsed_label.config(text=total_elapsed),
             self.eta_label.config(text="已完成", fg="green"),
-        ))
-        self.root.after(0, lambda: (
-            self.start_btn.config(state="normal"),
-            self.pause_btn.config(state="disabled", text="⏸ 暂停"),
         ))
 
 
